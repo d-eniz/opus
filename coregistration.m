@@ -1,7 +1,9 @@
 %% Setting up
 clear
+clf
+scan_depth = 30; % in milimetres
 
-opusImage = imread(fullfile('imgs', 'test1.png'));
+opusImage = imread(fullfile('imgs', 'slope_image.png'));
 if ndims(opusImage) == 3 && size(opusImage, 3) == 3 % If image is RGB convert to greyscale
     opusImage = rgb2gray(opusImage);
 end
@@ -28,12 +30,9 @@ end
 
 %% Image processing
 imshowpair(opusImage, uint8(peakPos), 'blend');
-selected_pixels = opusImage .* uint8(roipoly); % Create region of interest using polygonal lasso
-selected_pixels(selected_pixels > 0) = 1;
-mask = bsxfun(@times, fluorescenceImage, selected_pixels); % Create mask
+selection = opusImage .* uint8(roipoly); % Create region of interest using polygonal lasso
 
-orgImage = opusImage;
-opusImage(~selected_pixels) = 0; % Remove masked pixels
-finalImage = orgImage - opusImage + mask;
-
-imshow(finalImage)
+imshow(opusImage)
+hold on
+fl = imshow(fluorescenceImage);
+set(fl, 'AlphaData', selection)
