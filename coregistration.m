@@ -1,10 +1,12 @@
 %% Setting up
-opusImage = imread('test2.png');
+clear
+
+opusImage = imread(fullfile('imgs', 'test1.png'));
 if ndims(opusImage) == 3 && size(opusImage, 3) == 3 % If image is RGB convert to greyscale
     opusImage = rgb2gray(opusImage);
 end
 
-fluorescenceImage = imread('fluorescence.png');
+fluorescenceImage = imread(fullfile('imgs', 'fluorescence.png'));
 fluorescenceImage = imresize(fluorescenceImage, [size(opusImage, 1), size(opusImage, 2)]); % Normalize
 
 peakPos = zeros(size(opusImage)); % Empty matrix to store surface positions
@@ -24,14 +26,14 @@ for col = 1:size(opusImage, 2)
     end
 end
 
-%% Create image
-peakPos = cast(peakPos, 'like', fluorescenceImage); % Change data type
-
-maskedRgbImage = bsxfun(@times, fluorescenceImage, peakPos); % Create RGB mask
+%% Image processing
+imshowpair(opusImage, uint8(peakPos), 'blend');
+selected_pixels = opusImage .* uint8(roipoly); % Create region of interest using polygonal lasso
+selected_pixels(selected_pixels > 0) = 1;
+mask = bsxfun(@times, fluorescenceImage, selected_pixels); % Create mask
 
 orgImage = opusImage;
-opusImage(~peakPos) = 0; % Remove masked pixels
-
-finalImage = orgImage - opusImage + maskedRgbImage;
+opusImage(~selected_pixels) = 0; % Remove masked pixels
+finalImage = orgImage - opusImage + mask;
 
 imshow(finalImage)
